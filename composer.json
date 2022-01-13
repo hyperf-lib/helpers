@@ -1,5 +1,5 @@
 {
-    "name": "hyperf-lib/helpers",
+    "name": "hyperf-libs/helpers",
     "type": "library",
     "license": "MIT",
     "keywords": [
