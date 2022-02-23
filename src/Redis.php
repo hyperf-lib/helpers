@@ -41,6 +41,8 @@ class Redis
                 }
             }
         }
+
+        Log::debug(__CLASS__.'::'.$name, $arguments);
         return $redis->{$name}(...$arguments);
     }
 }

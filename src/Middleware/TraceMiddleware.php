@@ -12,6 +12,9 @@ declare(strict_types=1);
 namespace Helpers\Middleware;
 
 use Helpers\Trace;
+use Hyperf\Contract\ConfigInterface;
+use Hyperf\Utils\ApplicationContext;
+use OpenTracing\Tracer;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -20,22 +23,40 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 class TraceMiddleware implements MiddlewareInterface
 {
-    use Trace;
+    /**
+     * @var Tracer
+     */
+    protected $tracer;
 
     /**
-     * @var ContainerInterface
+     * Process an incoming server request.
+     * Processes an incoming server request in order to produce a response.
+     * If unable to produce the response itself, it may delegate to the provided
+     * request handler to do so.
+     * @param ServerRequestInterface  $request
+     * @param RequestHandlerInterface $handler
+     * @return ResponseInterface
      */
-    protected $container;
-
-    public function __construct(ContainerInterface $container)
-    {
-        $this->container = $container;
-    }
-
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $traceid = $request->getHeaderLine('traceid');
-        $this->putTraceId($traceid);
-        return $handler->handle($request);
+        if ($this->isIgnorePath($request)) {
+            return $handler->handle($request);
+        }
+
+        return parent::process($request, $handler);
+    }
+
+    /**
+     * 判断是否忽略Path
+     * @param ServerRequestInterface $request
+     * @return bool true为是需要忽略false为不需要忽略
+     */
+    protected function isIgnorePath(ServerRequestInterface $request): bool
+    {
+        $path      = (string)$request->getUri()->getPath();
+        $container = ApplicationContext::getContainer();
+        $config    = $container->get(ConfigInterface::class);
+
+        return in_array($path, (array)$config->get('opentracing.ignore_path'));
     }
 }

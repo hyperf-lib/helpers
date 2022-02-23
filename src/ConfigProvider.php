@@ -12,7 +12,9 @@ declare(strict_types=1);
 namespace Helpers;
 
 use Helpers\Aspect\LogAspect;
+use Helpers\Middleware\SetLoggerTraceidMiddleware;
 use Helpers\Middleware\TraceMiddleware;
+use Helpers\Request\HttpClient;
 
 class ConfigProvider
 {
@@ -20,12 +22,14 @@ class ConfigProvider
     {
         return [
             'dependencies' => [
+                HttpClient::class => HttpClient::class
             ],
             'commands' => [
             ],
             'middlewares' => [
                 'http' => [
                     TraceMiddleware::class,
+                    SetLoggerTraceidMiddleware::class
                 ],
             ],
             'aspect' => [

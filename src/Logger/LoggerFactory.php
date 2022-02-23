@@ -11,6 +11,7 @@ declare(strict_types=1);
  */
 namespace Helpers\Logger;
 
+use Helpers\Trace;
 use Hyperf\Logger\Logger;
 use Hyperf\Logger\LoggerFactory as HyperfLoggerFactory;
 use Hyperf\Utils\Context;
@@ -21,6 +22,7 @@ use Psr\Log\LoggerInterface;
  */
 class LoggerFactory extends HyperfLoggerFactory
 {
+    use Trace;
     public function get($name = 'hyperf', $group = 'default'): LoggerInterface
     {
         if (isset($this->loggers[$name]) && $this->loggers[$name] instanceof Logger) {
@@ -29,11 +31,25 @@ class LoggerFactory extends HyperfLoggerFactory
 
         $logger = $this->make($name, $group);
         $logger->pushProcessor(function ($record) {
-            $files = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[4];
+            $record['host'] = gethostname();
+            $record['app_name'] = config('app_name', '');
+            $record['app_env'] = config('app_env', '');
 
+            $files = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[4];
             $record['extra']['file'] = sprintf('%s:%s(%d)', $files['class'], $files['function'], $files['line']);
-            $record['extra']['host'] = gethostname();
             $record['extra']['traceid'] = Context::get('traceid');
+
+            if (interface_exists(\OpenTracing\Span::class)) {
+                $span = Context::get('tracer.root');
+                if ($span instanceof \OpenTracing\Span) {
+                    $record['trace_id'] = $span->getContext()->traceIdToString();
+                    $record['trace_flags'] = dechex($span->getContext()->getFlags());
+                    $record['span_id'] = dechex($span->getContext()->getSpanId());
+                    return $record;
+                }
+            }
+
+            $record['traceid'] = Context::get('traceid') ?: $this->putTraceId();
             return $record;
         });
         return $this->loggers[$name] = $logger;
