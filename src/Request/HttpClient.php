@@ -53,14 +53,10 @@ class HttpClient
     public function __call($method, $params): string
     {
         try {
-            // 默认5秒超时
-            isset($params[\GuzzleHttp\RequestOptions::TIMEOUT]) || $params[\GuzzleHttp\RequestOptions::TIMEOUT] = 5;
-
             Log::info('request:' . $method, $params);
             $requestStart = (int) (microtime(true) * 1000);
             $response = $this->clientFactory->{$method}(...$params);
-            $context = $response->getBody()
-                ->getContents();
+            $context = $response->getBody()->getContents();
             $requestEnd = (int) (microtime(true) * 1000);
             Log::info('http_api_response', [
                 'result' => $context,
