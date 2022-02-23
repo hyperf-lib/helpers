@@ -38,7 +38,7 @@ class TraceMiddleware implements MiddlewareInterface
             return $handler->handle($request);
         }
 
-        return parent::process($request, $handler);
+        return $handler->handle($request);
     }
 
     /**

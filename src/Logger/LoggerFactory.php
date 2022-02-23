@@ -32,13 +32,17 @@ class LoggerFactory extends HyperfLoggerFactory
 
         $logger = $this->make($name, $group);
         $logger->pushProcessor(function ($record) {
-            $record['host'] = gethostname();
-            $record['app_name'] = config('app_name', '');
-            $record['app_env'] = config('app_env', '');
+            $record['extra']['host'] = gethostname();
+            $record['extra']['app_name'] = config('app_name', '');
+            $record['extra']['app_env'] = config('app_env', '');
 
             $files = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)[4];
             $record['extra']['file'] = sprintf('%s:%s(%d)', $files['class'], $files['function'], $files['line']);
+            if (! Context::get('traceid')) {
+                $this->putTraceId();
+            }
             $record['extra']['traceid'] = Context::get('traceid');
+
 
             if (interface_exists(\OpenTracing\Span::class)) {
                 $span = Context::get('tracer.root');
@@ -50,7 +54,6 @@ class LoggerFactory extends HyperfLoggerFactory
                 }
             }
 
-            $record['traceid'] = Context::get('traceid') ?: $this->putTraceId();
             return $record;
         });
         return $this->loggers[$name] = $logger;
