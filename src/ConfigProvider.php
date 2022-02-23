@@ -22,14 +22,14 @@ class ConfigProvider
     {
         return [
             'dependencies' => [
-                HttpClient::class => HttpClient::class
+                HttpClient::class => HttpClient::class,
             ],
             'commands' => [
             ],
             'middlewares' => [
                 'http' => [
                     TraceMiddleware::class,
-                    SetLoggerTraceidMiddleware::class
+                    SetLoggerTraceidMiddleware::class,
                 ],
             ],
             'aspect' => [

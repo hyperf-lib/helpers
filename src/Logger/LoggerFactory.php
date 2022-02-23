@@ -23,6 +23,7 @@ use Psr\Log\LoggerInterface;
 class LoggerFactory extends HyperfLoggerFactory
 {
     use Trace;
+
     public function get($name = 'hyperf', $group = 'default'): LoggerInterface
     {
         if (isset($this->loggers[$name]) && $this->loggers[$name] instanceof Logger) {
